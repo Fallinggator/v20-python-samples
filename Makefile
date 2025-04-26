@@ -1,11 +1,22 @@
-.PHONY: bootstrap
-bootstrap: bootstrap-python3
+.PHONY: bootstrap dev run-configure ensure-venv
 
-bootstrap-python3:
-	virtualenv -p python3 env
-	env/bin/pip install -r requirements/base.txt
+VENV_DIR := .venv
+PYTHON := $(VENV_DIR)/bin/python
+PIP := $(VENV_DIR)/bin/pip
 
-bootstrap-python2:
-	virtualenv env-python2
-	env-python2/bin/pip install -r requirements/base.txt
+# Create virtual environment and install base requirements
+bootstrap:
+	python3 -m venv $(VENV_DIR)
+	$(PIP) install -r requirements/base.txt
 
+# Ensure venv is created before running anything that depends on it
+ensure-venv:
+	@test -d $(VENV_DIR) || (echo "Virtual environment not found. Run 'make bootstrap' first." && exit 1)
+
+# Install your local package in editable mode
+dev: ensure-venv
+	$(PIP) install -e .
+
+# Run your script with PYTHONPATH set
+run-configure: ensure-venv
+	PYTHONPATH=./src $(PYTHON) src/account/configure.py
